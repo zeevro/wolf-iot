@@ -1,8 +1,9 @@
 
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string, request, jsonify
 
+from wolf_iot.fulfillment import intent_handlers
 from wolf_iot.oauth2 import AUTH_HTML_TEMPLATE, AUTHORIZATION_CODE, CLIENT_ID, CLIENT_SECRET, auth_required, authenticate_request, create_token_response, json_error
 
 
@@ -79,10 +80,22 @@ def oauth_token():
 @auth_required
 def api_fulfullment():
     req = request.json
+    resp_payload = {}
 
+    for input_data in req['inputs']:
+        handler = intent_handlers.get(input_data['intent'], None)
+        if handler is None:
+            continue
+        payload = input_data.get('payload', None)
+        resp_payload.update(handler(payload))
 
+    if not resp_payload:
+        return jsonify()
 
-    return 'ok'
+    return jsonify(
+        requestId=req['requestId'],
+        payload=resp_payload,
+    )
 
 
 def main():
