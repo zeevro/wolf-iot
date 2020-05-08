@@ -35,6 +35,8 @@ setup(
     ],
     install_requires=[
         'flask',
+        'requests',
+        'google-auth',
     ],
     entry_points=dict(
         console_scripts=[
