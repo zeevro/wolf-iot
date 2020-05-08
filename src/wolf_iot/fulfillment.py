@@ -1,4 +1,4 @@
-import json
+import requests
 
 
 intent_handlers = {}
@@ -43,11 +43,22 @@ def handle_query_intent(payload):
     for device in payload['devices']:
         device_id = device['id']
 
-        ret[device_id] = dict(
-            online=True,
-            status='SUCCESS',
-            **my_devices[device_id],
-        )
+        if device_id in ret:
+            continue
+
+        try:
+            state = requests.get(my_devices[device_id]['url'], timeout=0.5).json()
+            ret[device_id] = dict(
+                online=True,
+                status='SUCCESS',
+                **state,
+            )
+        except Exception as e:
+            print('ERROR! {}: {}'.format(e.__class__.__name__, e))
+            ret[device_id] = dict(
+                online=False,
+                status='ERROR',
+            )
 
     return {'devices': ret}
 
@@ -56,21 +67,30 @@ def handle_query_intent(payload):
 def handle_execute_intent(payload):
     # print(json.dumps(payload, indent=2))
     ret = []
+    success = set()
+    error = set()
     for command in payload['commands']:
         device_ids = [device['id'] for device in command['devices']]
-        device_states = {}
         for execution in command['execution']:
-            device_states.update(execution['params'])
             for device_id in device_ids:
-                my_devices[device_id].update(execution['params'])
+                try:
+                    requests.post(my_devices[device_id]['url'], json=execution['params'], timeout=0.5)
+                    success.add(device_id)
+                except Exception as e:
+                    print('ERROR! {}: {}'.format(e.__class__.__name__, e))
+                    error.add(device_id)
 
-        ret.append({
-            'ids': device_ids,
-            'status': 'SUCCESS',
-            'states' : device_states,
-        })
+    if success:
+        ret.append(dict(
+            ids=list(success),
+            status='SUCCESS',
+        ))
 
-    print(json.dumps(my_devices, indent=2))
+    if error:
+        ret.append(dict(
+            ids=list(error),
+            status='ERROR',
+        ))
 
     return {'commands': ret}
 
@@ -82,7 +102,6 @@ def handle_disconnect_intent(payload):
 
 my_devices = {
     '1': {
-        'on': False,
-        'brightness': 100,
+        'url': 'http://10.0.0.51/',
     },
 }
