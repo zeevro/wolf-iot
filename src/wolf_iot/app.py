@@ -1,4 +1,4 @@
-
+import json
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from flask import Flask, render_template_string, request, jsonify
@@ -82,12 +82,16 @@ def api_fulfullment():
     req = request.json
     resp_payload = {}
 
+    print(json.dumps(req, indent=2))
+
     for input_data in req['inputs']:
         handler = intent_handlers.get(input_data['intent'], None)
         if handler is None:
             continue
         payload = input_data.get('payload', None)
         resp_payload.update(handler(payload))
+
+    print(json.dumps(resp_payload, indent=2))
 
     if not resp_payload:
         return jsonify()
