@@ -32,6 +32,11 @@ AUTH_HTML_TEMPLATE = '''<html>
                 <a href="{{ redirect_url|add_url_args(code=response_code)|safe }}" class="pure-button pure-button-primary">YES</a>
                 <a href="{{ redirect_url|add_url_args(error='access_denied')|safe }}" class="pure-button">NO</a>
             {% endif %}
+            <br><br>
+            <small>
+                Redirect URL:
+                <code>{{ redirect_url }}</code>
+            </small>
         </div>
     </body>
 </html>'''
