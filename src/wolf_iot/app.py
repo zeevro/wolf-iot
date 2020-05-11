@@ -2,13 +2,15 @@ import json
 
 from flask import Flask, request, jsonify
 
+from wolf_iot.config import init_config
 from wolf_iot.fulfillment import intent_handlers
 from wolf_iot.oauth2 import auth_required, init_oauth2
 
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
-app.secret_key = b'\x15\xe3\xdcsi\x1a\x9f\x13\xa1Y\xf4}z\t\xb4R\xf6~\xac\xf1E\x92\xdfC\x05\xca\xe5\x14j=\x8a&'
+
+init_config(app)
 
 init_oauth2(app)
 

@@ -1,19 +1,12 @@
+import base64
 import hmac
 import functools
 import json
 import secrets
 import time
-from base64 import b64decode, b64encode
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from flask import abort, current_app, jsonify, request, render_template_string
-
-
-TOKEN_EXPIRE_DURATION = 3 * 24 * 60 * 60  # 3 days
-CLIENT_ID = 'sc1vdBJXNq09NNrTIetvjheigzlAy8EOj8JlT2IrOyE'
-CLIENT_SECRET = 'FEJtfbHrLOHaNquXMZcuV03HXZFVqG9sSCkNRVXL_L8'
-AUTHORIZATION_CODE = '70s0Pq1cmocAE48136AJZgM3gR_irfjL5KTaLlWVUK4'
-REFRESH_TOKEN = 'yI4qGBdBDWzGm19_yZsDCn5O98A4xCDGXbcOPy6zseQ'
 
 
 AUTH_HTML_TEMPLATE = '''<html>
@@ -51,25 +44,36 @@ class AuthError(Exception):
 class TokenProvider:
     def __init__(self, secret, digest='sha256'):
         self._secret = secret
+        if not isinstance(self._secret, bytes):
+            self._secret = str(self._secret).encode()
         self._digest = digest
 
     def _hmac(self, data):
         return hmac.digest(self._secret, data, self._digest)
 
     @staticmethod
+    def b64encode(data):
+        return base64.b64encode(data, altchars=b'-_').decode().rstrip('=')
+
+    @staticmethod
+    def b64decode(data):
+        return base64.b64decode(data + (b'===' if isinstance(data, bytes) else '==='), altchars=b'-_')
+
+    @staticmethod
     def generate_token(**kw):
         return dict(
             nonce=secrets.token_urlsafe(),
-            expires_at=int(time.time()) + TOKEN_EXPIRE_DURATION,
+            expires_at=int(time.time()) + current_app.config['TOKEN_EXPIRE_DURATION'],
             **kw,
         )
 
     def encode_token(self, token):
         token = json.dumps(token, separators=(',', ':')).encode()
-        return b'.'.join(map(b64encode, [token, self._hmac(token)])).decode()
+        return '.'.join(map(self.b64encode, [token, self._hmac(token)]))
 
     def decode_token(self, data, verify=True):
-        token, signature = map(b64decode, data.split('.', 1))
+        token, signature = map(self.b64decode, data.split('.', 1))
+        print(data, token, signature)
         if verify and signature != self._hmac(token):
             raise AuthError('Invalid token')
         token = json.loads(token)
@@ -105,7 +109,7 @@ def authenticate_request():
 def auth_required(f):
     @functools.wraps(f)
     def wrapper(*a, **kw):
-        if not authenticate_request:
+        if not authenticate_request():
             return abort(401)
         return f(*a, **kw)
     return wrapper
@@ -119,8 +123,8 @@ def create_token_response():
     return jsonify(
         access_token=token_provider.encode_token(token),
         token_type='Bearer',
-        expires_in=TOKEN_EXPIRE_DURATION,
-        refresh_token=REFRESH_TOKEN,
+        expires_in=current_app.config['TOKEN_EXPIRE_DURATION'],
+        refresh_token=current_app.config['REFRESH_TOKEN'],
     )
 
 
@@ -138,12 +142,12 @@ def authorize_endpoint():
         redirect_url = add_url_args(redirect_url, state=request.args['state'])
 
     error = None
-    if request.args['client_id'] != CLIENT_ID:
+    if request.args['client_id'] != current_app.config['CLIENT_ID']:
         error = 'unauthorized_client'
     elif request.args['response_type'] != 'code':
         error = 'unsupported_response_type'
 
-    response_code = AUTHORIZATION_CODE
+    response_code = current_app.config['AUTHORIZATION_CODE']
 
     return render_template_string(AUTH_HTML_TEMPLATE, **locals())
 
@@ -157,19 +161,20 @@ def token_endpoint():
     if {'grant_type', 'client_id', 'client_secret'}.difference(request.form):
         return json_error('invalid_request')
 
-    if (request.form['client_id'] != CLIENT_ID) or (request.form['client_secret'] != CLIENT_SECRET):
+    if (request.form['client_id'] != current_app.config['CLIENT_ID']) or (request.form['client_secret'] != current_app.config['CLIENT_SECRET']):
         return json_error('invalid_client', 401)
 
     grant_type = request.form['grant_type']
 
     if grant_type == 'authorization_code':
-        if {'code', 'redirect_uri'}.difference(request.form):
+        if 'code' not in request.form:
             return json_error('invalid_request')
+        if request.form['code'] != current_app.config['AUTHORIZATION_CODE']:
+            return json_error('invalid_grant')
     elif grant_type == 'refresh_token':
         if 'refresh_token' not in request.form:
             return json_error('invalid_request')
-
-        if request.form['refresh_token'] != REFRESH_TOKEN:
+        if request.form['refresh_token'] != current_app.config['REFRESH_TOKEN']:
             return json_error('invalid_grant')
     else:
         return json_error('unsupported_grant_type')
