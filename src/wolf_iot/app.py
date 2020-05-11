@@ -1,3 +1,4 @@
+import argparse
 import json
 
 from flask import Flask, request, jsonify
@@ -42,14 +43,18 @@ def api_fulfullment():
 
 
 def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('-D', '--debug', action='store_true')
+    p.add_argument('-c', '--cert-path', required=True)
+    p.add_argument('-k', '--key-path', required=True)
+    p.add_argument('-p', '--port', type=int, default=443)
+    args = p.parse_args()
+
     app.run(
         '0.0.0.0',
-        3459,
-        ssl_context=(
-            r'C:\Temp\Sec\home.zeevro.com\certificate.crt',
-            r'C:\Temp\Sec\home.zeevro.com\private.key',
-        ),
-        debug=True,
+        args.port,
+        ssl_context=(args.cert_path, args.key_path),
+        debug=args.debug,
         use_reloader=True,
     )
 
