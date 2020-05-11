@@ -73,7 +73,6 @@ class TokenProvider:
 
     def decode_token(self, data, verify=True):
         token, signature = map(self.b64decode, data.split('.', 1))
-        print(data, token, signature)
         if verify and signature != self._hmac(token):
             raise AuthError('Invalid token')
         token = json.loads(token)

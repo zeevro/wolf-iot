@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 
 from wolf_iot.config import init_config
 from wolf_iot.fulfillment import intent_handlers

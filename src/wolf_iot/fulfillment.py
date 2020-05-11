@@ -65,7 +65,6 @@ def handle_query_intent(payload):
 
 @intent_handler('action.devices.EXECUTE')
 def handle_execute_intent(payload):
-    # print(json.dumps(payload, indent=2))
     ret = []
     success = set()
     error = set()
