@@ -45,10 +45,19 @@ def api_fulfullment():
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('-D', '--debug', action='store_true')
-    p.add_argument('-c', '--cert-path', required=True)
-    p.add_argument('-k', '--key-path', required=True)
+    p.add_argument('-c', '--cert-path')
+    p.add_argument('-k', '--key-path')
     p.add_argument('-p', '--port', type=int, default=443)
+    p.add_argument('-i', '--info', action='store_true')
     args = p.parse_args()
+
+    if args.info:
+        print('Client ID:     {}'.format(app.config['CLIENT_ID']))
+        print('Client secret: {}'.format(app.config['CLIENT_SECRET']))
+        return
+
+    if None in (args.cert_path, args.key_path):
+        p.error('the following arguments are required: -c/--cert-path, -k/--key-path')
 
     app.run(
         '0.0.0.0',
