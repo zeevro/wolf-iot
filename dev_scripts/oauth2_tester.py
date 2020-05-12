@@ -79,8 +79,6 @@ def callback():
 
     return render_template_string(HTML_TEMPLATE, token=token, sync_resp=sync_resp)
 
-    return f'<h3>Token</h3><pre>{json.dumps(token, indent=2)}</pre><h3>Sync response</h3><pre>{json.dumps(sync_resp, indent=2)}</pre>'
-
 
 def main():
     app.run(

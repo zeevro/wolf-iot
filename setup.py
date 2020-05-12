@@ -18,7 +18,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
     ],
     license=None,
-    description='A tool to generate TOTP code based using secrets from WinAuth',
+    description='A stand-alone Google Home integration server',
     keywords=[
         'Google Assistant',
         'Google Home',
