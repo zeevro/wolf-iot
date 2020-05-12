@@ -19,7 +19,7 @@ It implements the most basic and simple OAuth 2.0 and is meant for running on yo
 1. Go to the [Google Actions Console](https://console.actions.google.com/) and create a new project
 2. In the *Actions* tab fill in the *Fulfillment URL* as `https://my.public.dns.hostname:port/api/fulfillment/`
 3. In the *Account linking* tab fill in *Client ID*, *Client secret*, *Authorization URL* and *Token URL*:
-   - *Client ID* and *Client secret* can be found in the configuration file `config.json` that is created automatically after you run the server for the first time.
+   - *Client ID* and *Client secret* can be acquired by running ```wolf_iot_server -i```.
    - *Authorization URL*: `https://my.public.dns.hostname:port/oauth/authorize/`
    - *Token URL*: `https://my.public.dns.hostname:port/oauth/token/`
 4. OPTIONAL: How to setup sync requests
