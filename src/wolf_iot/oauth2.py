@@ -54,7 +54,7 @@ class TokenProvider:
         self._digest = digest
 
     def _hmac(self, data):
-        return hmac.digest(self._secret, data, self._digest)
+        return hmac.new(self._secret, data, self._digest).digest()
 
     @staticmethod
     def b64encode(data):
