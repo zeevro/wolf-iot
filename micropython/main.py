@@ -12,7 +12,7 @@ presets = [18, 50, 100]
 button = Pin(13, Pin.IN, Pin.PULL_UP)
 
 led_pwm = PWM(Pin(5))
-led_pwm.freq(200)
+led_pwm.freq(2000)
 
 
 state = {
