@@ -52,7 +52,7 @@ def login():
 
     # State is used to prevent CSRF, keep this for later.
     session['oauth_state'] = state
-    return f'<a href="{authorization_url}">GO!</a>'
+    return f'<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.1/build/pure-min.css"><a href="{authorization_url}" class="pure-button pure-button-primary">GO!</a>'
 
 
 @app.route("/callback")
