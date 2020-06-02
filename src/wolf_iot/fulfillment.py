@@ -1,4 +1,5 @@
 import json
+import sys
 
 import requests
 from flask import jsonify, request
@@ -59,7 +60,7 @@ def handle_query_intent(payload):
                 **state,
             )
         except Exception as e:
-            print('ERROR! {}: {}'.format(e.__class__.__name__, e))
+            print('ERROR! {}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             ret[device_id] = dict(
                 online=False,
                 status='ERROR',
@@ -81,7 +82,7 @@ def handle_execute_intent(payload):
                     requests.post(my_devices[device_id]['url'], json=execution['params'], timeout=0.5)
                     success.add(device_id)
                 except Exception as e:
-                    print('ERROR! {}: {}'.format(e.__class__.__name__, e))
+                    print('ERROR! {}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
                     error.add(device_id)
 
     if success:
@@ -109,8 +110,7 @@ def fulfillment_endpoint():
     req = request.json
     resp_payload = {}
 
-    print('FULFILLMENT REQUEST')
-    print(json.dumps(req, indent=2))
+    print(json.dumps(req, indent=2), file=sys.stderr)
 
     for input_data in req['inputs']:
         handler = intent_handlers.get(input_data['intent'], None)
@@ -119,7 +119,7 @@ def fulfillment_endpoint():
         payload = input_data.get('payload', None)
         resp_payload.update(handler(payload))
 
-    print(json.dumps(resp_payload, indent=2))
+    print(json.dumps(resp_payload, indent=2), file=sys.stderr)
 
     if not resp_payload:
         return jsonify()

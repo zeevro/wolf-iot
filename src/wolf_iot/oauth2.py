@@ -4,6 +4,7 @@ import functools
 import json
 import secrets
 import time
+import sys
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from flask import abort, current_app, jsonify, request, render_template_string
@@ -87,7 +88,7 @@ class TokenProvider:
 
 
 def json_error(error, status_code=400):
-    print('JSON ERROR!', error, status_code)
+    print('JSON ERROR!', error, status_code, file=sys.stderr)
     resp = jsonify(error=error)
     resp.status_code = status_code
     return resp
@@ -157,8 +158,8 @@ def authorize_endpoint():
 
 
 def token_endpoint():
-    print(request.headers)
-    print(request.form)
+    print(request.headers, file=sys.stderr)
+    print(request.form, file=sys.stderr)
     # TODO: (As per https://tools.ietf.org/html/rfc6749#section-4.1.3)
     #   o Ensure "redirect_uri" is present and identical to one in authorization request
 
