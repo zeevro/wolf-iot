@@ -2,14 +2,17 @@ import json
 import os
 import secrets
 
+import appdirs
 
-CONFIG_PATH = 'config.json'
+
+CONFIG_PATH = os.path.join(appdirs.site_config_dir('wolf_iot', False), 'config.json')
 
 
 def init_config(app):
     try:
         app.config.from_json(CONFIG_PATH)
     except FileNotFoundError:
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
         config = {
             'SECRET_KEY': secrets.token_urlsafe(),
             'TOKEN_EXPIRE_DURATION': 24 * 60 * 60,

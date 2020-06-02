@@ -1,6 +1,6 @@
 from flask import Flask
 
-from wolf_iot.config import init_config
+from wolf_iot.config import init_config, CONFIG_PATH
 from wolf_iot.fulfillment import init_fulfillment
 from wolf_iot.oauth2 import init_oauth2
 
@@ -25,6 +25,7 @@ def main():
     args = p.parse_args()
 
     if args.info:
+        print('Config file:   {}'.format(CONFIG_PATH))
         print('Client ID:     {}'.format(app.config['CLIENT_ID']))
         print('Client secret: {}'.format(app.config['CLIENT_SECRET']))
         return

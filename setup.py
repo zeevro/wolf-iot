@@ -34,6 +34,7 @@ setup(
         'wolf_iot',
     ],
     install_requires=[
+        'appdirs',
         'flask',
         'requests',
         'google-auth',
