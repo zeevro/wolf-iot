@@ -1,4 +1,9 @@
+import json
+
 import requests
+from flask import jsonify, request
+
+from wolf_iot.oauth2 import auth_required
 
 
 intent_handlers = {}
@@ -99,8 +104,38 @@ def handle_disconnect_intent(payload):
     pass
 
 
+@auth_required
+def fulfillment_endpoint():
+    req = request.json
+    resp_payload = {}
+
+    print('FULFILLMENT REQUEST')
+    print(json.dumps(req, indent=2))
+
+    for input_data in req['inputs']:
+        handler = intent_handlers.get(input_data['intent'], None)
+        if handler is None:
+            continue
+        payload = input_data.get('payload', None)
+        resp_payload.update(handler(payload))
+
+    print(json.dumps(resp_payload, indent=2))
+
+    if not resp_payload:
+        return jsonify()
+
+    return jsonify(
+        requestId=req['requestId'],
+        payload=resp_payload,
+    )
+
+
 my_devices = {
     '1': {
         'url': 'http://10.0.0.51/',
     },
 }
+
+
+def init_fulfillment(app, fulfillment_endpoint_rule='/api/fulfillment/'):
+    app.add_url_rule(fulfillment_endpoint_rule, 'fulfillment_endpoint', fulfillment_endpoint, methods=['POST'])
