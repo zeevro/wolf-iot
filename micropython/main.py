@@ -77,12 +77,19 @@ def index(req, resp):
             yield from resp.awrite('Bad request')
             return
 
-        print('HTTP: old state:', state)
-
         size = int(req.headers[b'Content-Length'])
         raw_data = yield from req.reader.readexactly(size)
         data = ujson.loads(raw_data)
+
+        print('HTTP: request:', data)
+        print('HTTP: old state:', state)
+
         state.update(data)
+
+        if 'on' not in data:
+            state['on'] = bool(data.get('brightness', 0))
+        elif data['on'] and not state['brightness']:
+            state['brightness'] = 100
 
         duty = percent_to_duty(state['brightness']) if state['on'] else 0
 
