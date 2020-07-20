@@ -21,10 +21,12 @@ state = {
 }
 
 
+B = 0.023
+A = 1024 / (math.exp(B * 100) - 1)
+
+
 def percent_to_duty(percent):
-    b = 0.023
-    a = 1024 / (math.exp(b * 100) - 1)
-    return int(a * (math.exp(b * percent) - 1))
+    return int(A * (math.exp(B * percent) - 1))
 
 
 async def handle_button():
