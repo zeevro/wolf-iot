@@ -128,8 +128,29 @@ devices_data_for_query = []
 def init_fulfillment(app, fulfillment_endpoint_rule='/api/fulfillment/'):
     app.add_url_rule(fulfillment_endpoint_rule, 'fulfillment_endpoint', fulfillment_endpoint, methods=['POST'])
 
-    with open(DEVICES_PATH) as f:
-        devices_config = json.load(f)
+    try:
+        with open(DEVICES_PATH) as f:
+            devices_config = json.load(f)
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(DEVICES_PATH), exist_ok=True)
+        devices_config = [
+            {
+                "id": "1",
+                "type": "action.devices.types.LIGHT",
+                "traits": [
+                    "action.devices.traits.OnOff",
+                    "action.devices.traits.Brightness"
+                ],
+                "name": {
+                    "name": "Dimmable light example"
+                },
+                "willReportState": False,
+                "roomHint": "Bedroom",
+                "url": "http://192.168.1.153/"
+            }
+        ]
+        with open(DEVICES_PATH, 'w') as f:
+            json.dump(devices_config, f, indent=4)
 
     for dev in devices_config:
         device_urls[dev['id']] = dev.pop('url')

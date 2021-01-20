@@ -21,6 +21,6 @@ def init_config(app):
             'AUTHORIZATION_CODE': secrets.token_urlsafe(),
             'REFRESH_TOKEN': secrets.token_urlsafe(),
         }
-        with open(os.path.join(app.config.root_path, CONFIG_PATH), 'w') as f:
+        with open(CONFIG_PATH, 'w') as f:
             json.dump(config, f, indent=4)
         app.config.from_mapping(config)
