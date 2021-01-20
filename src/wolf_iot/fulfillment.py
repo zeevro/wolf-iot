@@ -1,10 +1,15 @@
 import json
+import os
 import sys
 
+import appdirs
 import requests
 from flask import jsonify, request
 
 from wolf_iot.oauth2 import auth_required
+
+
+DEVICES_PATH = os.path.join(appdirs.site_config_dir('wolf_iot', False), 'devices.json')
 
 
 intent_handlers = {}
@@ -25,21 +30,7 @@ def intent_handler(intent):
 def handle_sync_intent(payload):
     return {
         'agentUserId': '1',
-        'devices': [
-            {
-                'id': '1',
-                'type': 'action.devices.types.LIGHT',
-                'traits': [
-                    'action.devices.traits.OnOff',
-                    'action.devices.traits.Brightness',
-                ],
-                'name': {
-                    'name': 'Night light',
-                },
-                'willReportState': False,
-                'roomHint': 'Bedroom',
-            },
-        ],
+        'devices': devices_data_for_query,
     }
 
 
@@ -53,7 +44,7 @@ def handle_query_intent(payload):
             continue
 
         try:
-            state = requests.get(my_devices[device_id]['url'], timeout=0.5).json()
+            state = requests.get(device_urls[device_id], timeout=0.5).json()
             ret[device_id] = dict(
                 online=True,
                 status='SUCCESS',
@@ -79,7 +70,7 @@ def handle_execute_intent(payload):
         for execution in command['execution']:
             for device_id in device_ids:
                 try:
-                    requests.post(my_devices[device_id]['url'], json=execution['params'], timeout=0.5)
+                    requests.post(device_urls[device_id], json=execution['params'], timeout=0.5)
                     success.add(device_id)
                 except Exception as e:
                     print('ERROR! {}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
@@ -130,12 +121,16 @@ def fulfillment_endpoint():
     )
 
 
-my_devices = {
-    '1': {
-        'url': 'http://10.0.0.51/',
-    },
-}
+device_urls = {}
+devices_data_for_query = []
 
 
 def init_fulfillment(app, fulfillment_endpoint_rule='/api/fulfillment/'):
     app.add_url_rule(fulfillment_endpoint_rule, 'fulfillment_endpoint', fulfillment_endpoint, methods=['POST'])
+
+    with open(DEVICES_PATH) as f:
+        devices_config = json.load(f)
+
+    for dev in devices_config:
+        device_urls[dev['id']] = dev.pop('url')
+        devices_data_for_query.append(dev)
