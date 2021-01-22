@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 
 from flask import jsonify, request
@@ -41,7 +40,7 @@ def handle_query_intent(payload):
             continue
 
         try:
-            ret[device_id].update(device.query())
+            ret[device_id] = device.query()
             ret[device_id].setdefault('online', True)
             ret[device_id].setdefault('status', 'SUCCESS')
         except Exception as e:

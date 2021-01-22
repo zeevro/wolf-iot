@@ -35,16 +35,16 @@ class TasmotaDevice(BaseDevice):
     @staticmethod
     def _translate_state(state):
         return {
-            'on': state['POWER'],
+            'on': str(state['POWER']).lower() in ('on', 'true', '1'),
             'brightness': state['Dimmer'],
         }
 
     def query(self):
-        self._translate_state(self._cmnd('state'))
+        return self._translate_state(self._cmnd('state'))
 
     def execute(self, data):
         cmnd = 'state'
-        for k, v in data['params']:
+        for k, v in data['params'].items():
             if k in self._commands:
                 cmnd = f'{self._commands[k]} {v}'
                 break
