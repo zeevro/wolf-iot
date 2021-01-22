@@ -2,14 +2,10 @@ import json
 import os
 import sys
 
-import appdirs
-import requests
 from flask import jsonify, request
 
 from wolf_iot.oauth2 import auth_required
-
-
-DEVICES_PATH = os.path.join(appdirs.site_config_dir('wolf_iot', False), 'devices.json')
+from wolf_iot.devices import generate_devices_from_config
 
 
 intent_handlers = {}
@@ -37,19 +33,17 @@ def handle_sync_intent(payload):
 @intent_handler('action.devices.QUERY')
 def handle_query_intent(payload):
     ret = {}
-    for device in payload['devices']:
-        device_id = device['id']
+    for device_data in payload['devices']:
+        device_id = device_data['id']
+        device = devices[device_id]
 
         if device_id in ret:
             continue
 
         try:
-            state = requests.get(device_urls[device_id], timeout=0.5).json()
-            ret[device_id] = dict(
-                online=True,
-                status='SUCCESS',
-                **state,
-            )
+            ret[device_id].update(device.query())
+            ret[device_id].setdefault('online', True)
+            ret[device_id].setdefault('status', 'SUCCESS')
         except Exception as e:
             print('ERROR! {}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             ret[device_id] = dict(
@@ -69,8 +63,9 @@ def handle_execute_intent(payload):
         device_ids = [device['id'] for device in command['devices']]
         for execution in command['execution']:
             for device_id in device_ids:
+                device = devices[device_id]
                 try:
-                    requests.post(device_urls[device_id], json=execution['params'], timeout=0.5)
+                    device.execute(execution)
                     success.add(device_id)
                 except Exception as e:
                     print('ERROR! {}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
@@ -121,37 +116,13 @@ def fulfillment_endpoint():
     )
 
 
-device_urls = {}
+devices = {}
 devices_data_for_query = []
 
 
 def init_fulfillment(app, fulfillment_endpoint_rule='/api/fulfillment/'):
     app.add_url_rule(fulfillment_endpoint_rule, 'fulfillment_endpoint', fulfillment_endpoint, methods=['POST'])
 
-    try:
-        with open(DEVICES_PATH) as f:
-            devices_config = json.load(f)
-    except FileNotFoundError:
-        os.makedirs(os.path.dirname(DEVICES_PATH), exist_ok=True)
-        devices_config = [
-            {
-                "id": "1",
-                "type": "action.devices.types.LIGHT",
-                "traits": [
-                    "action.devices.traits.OnOff",
-                    "action.devices.traits.Brightness"
-                ],
-                "name": {
-                    "name": "Dimmable light example"
-                },
-                "willReportState": False,
-                "roomHint": "Bedroom",
-                "url": "http://192.168.1.153/"
-            }
-        ]
-        with open(DEVICES_PATH, 'w') as f:
-            json.dump(devices_config, f, indent=4)
-
-    for dev in devices_config:
-        device_urls[dev['id']] = dev.pop('url')
-        devices_data_for_query.append(dev)
+    for device_id, device_handler, query_description in generate_devices_from_config():
+        devices[device_id] = device_handler
+        devices_data_for_query.append(query_description)
