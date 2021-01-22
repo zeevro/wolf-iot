@@ -4,6 +4,8 @@ A dead-simple stand-alone server for implementing a Google Home integration writ
 
 It implements the most basic and simple OAuth 2.0 and is meant for running on your own computer inside your home network so it has no users, no log-ins and so needs no database.
 
+NOTE: This was created for my own use and so it is very simple, bare-bones and in some places has hard-coded stuff.
+
 ## Installation
 
 ```pip install https://github.com/zeevro/wolf-iot/archive/master.zip```
