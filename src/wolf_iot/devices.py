@@ -20,7 +20,7 @@ class WolfIoTDevice(BaseDevice):
         return requests.get(self.url, timeout=0.5).json()
 
     def execute(self, data):
-        return requests.post(self.url, json=data['params'], timeout=0.5)
+        requests.post(self.url, json=data['params'], timeout=0.5)
 
 
 class TasmotaDevice(BaseDevice):
@@ -43,12 +43,10 @@ class TasmotaDevice(BaseDevice):
         return self._translate_state(self._cmnd('state'))
 
     def execute(self, data):
-        cmnd = 'state'
         for k, v in data['params'].items():
             if k in self._commands:
-                cmnd = f'{self._commands[k]} {v}'
+                self._cmnd(f'{self._commands[k]} {v}')
                 break
-        return self._translate_state(self._cmnd(cmnd))
 
 
 def generate_devices_from_config():
