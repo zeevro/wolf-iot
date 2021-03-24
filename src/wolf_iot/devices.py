@@ -1,4 +1,3 @@
-import json
 import os
 import posixpath
 
@@ -35,7 +34,7 @@ class TasmotaDevice(BaseDevice):
     }
 
     def _cmnd(self, cmnd):
-        return requests.get(posixpath.join(self.url, 'cm'), {'cmnd': cmnd}, timeout=0.5).json()
+        return requests.get(posixpath.join(self.url, 'cm'), {'cmnd': cmnd}, timeout=1).json()
 
     @staticmethod
     def _translate_state(state):
