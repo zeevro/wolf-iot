@@ -39,10 +39,11 @@ class TasmotaDevice(BaseDevice):
 
     @staticmethod
     def _translate_state(state):
-        return {
-            'on': str(state['POWER']).lower() in ('on', 'true', '1'),
-            'brightness': state['Dimmer'],
-        }
+        on_key = 'POWER' if 'POWER' in state else 'POWER1'
+        ret = {'on': str(state[on_key]).lower() in ('on', 'true', '1')}
+        if 'Dimmer' in state:
+            ret['brightness'] = state['Dimmer']
+        return ret
 
     def query(self):
         return self._translate_state(self._cmnd('state'))
