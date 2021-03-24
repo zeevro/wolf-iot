@@ -5,6 +5,11 @@ import posixpath
 import appdirs
 import requests
 
+try:
+    import commentjson as json
+except ImportError:
+    import json
+
 
 DEVICES_PATH = os.path.join(appdirs.site_config_dir('wolf_iot', False), 'devices.json')
 

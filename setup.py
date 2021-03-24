@@ -35,6 +35,7 @@ setup(
     ],
     install_requires=[
         'appdirs',
+        'commentjson',
         'flask',
         'requests',
         'google-auth',
