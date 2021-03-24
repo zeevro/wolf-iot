@@ -55,6 +55,36 @@ class TasmotaDevice(BaseDevice):
                 break
 
 
+class TasmotaFanDevice(TasmotaDevice):
+    _fan_speeds_query = [
+        'high_speed',
+        'low_speed',
+        'medium_speed',
+        'high_speed'
+    ]
+
+    _fan_speeds_command = {
+        'low_speed': 1,
+        'medium_speed': 2,
+        'high_speed': 3
+    }
+
+    @classmethod
+    def _translate_state(cls, state):
+        speed = state['FanSpeed']
+        return {
+            'on': bool(speed),
+            'fanspeed': cls._fan_speeds_query[speed],
+        }
+
+    def execute(self, data):
+        params = data['params']
+        if 'on' in params:
+            self._cmnd(f"POWER2 {params['on']}")
+        elif 'fanSpeed' in params:
+            self._cmnd(f"FanSpeed {self._fan_speeds_command[params['fanSpeed']]}")
+
+
 def generate_devices_from_config():
     try:
         with open(DEVICES_PATH) as f:
