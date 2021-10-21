@@ -37,8 +37,9 @@ setup(
         'appdirs',
         'commentjson',
         'flask',
-        'requests',
         'google-auth',
+        'paho-mqtt',
+        'requests',
     ],
     entry_points=dict(
         console_scripts=[
