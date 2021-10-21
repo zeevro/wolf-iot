@@ -7,7 +7,7 @@ from paho.mqtt.client import Client as MQTTClient
 def parse_mqtt_url(url):
     parts = urllib.parse.urlparse(url)
 
-    return parts.path.split('/', 2)[1], parts.hostname, parts.port or 1883, parts.username, parts.password
+    return parts.path.split('/', 2)[1], parts.hostname or 'localhost', parts.port or 1883, parts.username, parts.password
 
 
 def mqtt_cmnd(topic, payload=None, resp_topic=None, host=None, port=1883, username=None, password=None):
