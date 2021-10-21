@@ -1,32 +1,18 @@
-import math
 import uasyncio
 import ujson
-from machine import Pin, PWM, sleep
+from machine import Pin
 
 import picoweb
 
 
-#presets = [0, 60, 380, 1024]
-presets = [18, 50, 100]
-
 button = Pin(13, Pin.IN, Pin.PULL_UP)
 
-led_pwm = PWM(Pin(5))
-led_pwm.freq(2000)
+out = Pin(5, Pin.OUT)
 
 
 state = {
     'on': False,
-    'brightness': 100,
 }
-
-
-B = 0.023
-A = 1024 / (math.exp(B * 100) - 1)
-
-
-def percent_to_duty(percent):
-    return int(A * (math.exp(B * percent) - 1))
 
 
 async def handle_button():
@@ -36,20 +22,8 @@ async def handle_button():
 
         print('click: old state:', state)
 
-        if not state['on']:
-            percent = presets[0]
-        else:
-            for percent in presets:
-                if percent > state['brightness']:
-                    break
-            else:
-                percent = 0
-
-        duty = percent and percent_to_duty(percent)
-        led_pwm.duty(duty)
-
-        state['on'] = bool(percent)
-        state['brightness'] = percent
+        state['on'] = not state['on']
+        out(state['on'])
 
         print('click: new state:', state)
 
@@ -88,14 +62,7 @@ def index(req, resp):
 
         state.update(data)
 
-        if 'on' not in data:
-            state['on'] = bool(data.get('brightness', 0))
-        elif data['on'] and not state['brightness']:
-            state['brightness'] = 100
-
-        duty = percent_to_duty(state['brightness']) if state['on'] else 0
-
-        led_pwm.duty(duty)
+        out(state['on'])
 
         print('HTTP: new state:', state)
 
