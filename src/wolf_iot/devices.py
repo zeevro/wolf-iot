@@ -86,7 +86,7 @@ class TasmotaFanDevice(TasmotaDevice):
         speed = state['FanSpeed']
         return {
             'on': bool(speed),
-            'fanspeed': cls._fan_speeds_query[speed],
+            'currentFanSpeedSetting': cls._fan_speeds_query[speed],
         }
 
     def execute(self, data):
