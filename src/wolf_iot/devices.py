@@ -4,6 +4,8 @@ import posixpath
 import appdirs
 import requests
 
+from .utils import parse_mqtt_url, mqtt_cmnd
+
 try:
     import commentjson as json
 except ImportError:
@@ -34,7 +36,18 @@ class TasmotaDevice(BaseDevice):
     }
 
     def _cmnd(self, cmnd):
-        return requests.get(posixpath.join(self.url, 'cm'), {'cmnd': cmnd}, timeout=1).json()
+        if self.url.startswith('http://'):
+            return requests.get(posixpath.join(self.url, 'cm'), {'cmnd': cmnd}, timeout=1).json()
+
+        if self.url.startswith('mqtt://'):
+            device_name, host, port, username, password = parse_mqtt_url(self.url)
+
+            try:
+                cmnd, payload = cmnd.split(None, 1)
+            except ValueError:
+                payload = None
+
+            return json.loads(mqtt_cmnd(f'cmnd/{device_name}/{cmnd}', payload, f'stat/{device_name}/RESULT', host, port, username, password))
 
     @staticmethod
     def _translate_state(state):
