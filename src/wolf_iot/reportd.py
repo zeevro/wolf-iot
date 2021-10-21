@@ -1,7 +1,8 @@
 import argparse
 import json
-import threading
 import sys
+import time
+import uuid
 
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2 import service_account
@@ -38,15 +39,16 @@ class Reporter:
                 # log(f'no change for {device.id}')
                 continue
             # log(f'{device.id}({device_name}#{device.__class__.__name__}): {new_state}')
-            self._state[device.id] = new_state
+            self._state.setdefault(device.id, {}).update(new_state)
             # log('<STATE>', self._state)
-            to_report[device.id] = new_state
+            to_report[device.id] = self._state[device.id]
 
         if not to_report:
             return
 
         req = {
             'agentUserId': '1',
+            'requestId': str(uuid.uuid4()),
             'payload': {
                 'devices': {
                     'states': to_report,
@@ -101,7 +103,8 @@ def main():
         clients.append(client)
 
     try:
-        threading.Event().wait()
+        while 1:
+            time.sleep(5)
     except KeyboardInterrupt:
         print('Ctrl-C')
 
