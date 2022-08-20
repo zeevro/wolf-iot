@@ -10,7 +10,7 @@ CONFIG_PATH = os.path.join(appdirs.site_config_dir('wolf_iot', False), 'config.j
 
 def init_config(app):
     try:
-        app.config.from_json(CONFIG_PATH)
+        app.config.from_file(CONFIG_PATH, load=json.load)
     except FileNotFoundError:
         os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
         config = {
