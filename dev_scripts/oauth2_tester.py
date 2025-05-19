@@ -1,8 +1,8 @@
 import json
+from typing import Any
 
+from flask import Flask, render_template_string, request, session, url_for
 from requests_oauthlib import OAuth2Session
-
-from flask import Flask, request, render_template_string, session, url_for
 
 from wolf_iot.app import app as wolf_iot_app
 
@@ -14,7 +14,7 @@ TOKEN_URL = BASE_URL + 'oauth/token'
 CLIENT_ID = wolf_iot_app.config['CLIENT_ID']
 CLIENT_SECRET = wolf_iot_app.config['CLIENT_SECRET']
 
-HTML_TEMPLATE = '''<html>
+HTML_TEMPLATE = """<html>
     <head>
         <title>Oauth2 response</title>
         <link href="https://unpkg.com/prismjs@v1.x/themes/prism.css" rel="stylesheet" />
@@ -28,25 +28,24 @@ HTML_TEMPLATE = '''<html>
         <pre><code class="language-json">{{ sync_resp|pretty_json|safe }}</code></pre>
         <a href="/">Go again</a>
     </body>
-</html>'''
+</html>"""
 
 
 app = Flask(__name__)
 app.secret_key = b'P\x86\xecGV&\xbdm\x08z\xf2h}\xf6\x1dt\xc3vM\x06\x0b\xe6\x88\x9c.\xab\xa4\xbb\x84\x85\xbd\xc0'
 
 
-def pretty_json(o):
+@app.add_template_filter
+def pretty_json(o: Any) -> str:
     return json.dumps(
         o,
         indent=4,
         sort_keys=True,
-        separators=(',', ': '),
     )
-app.add_template_filter(pretty_json)
 
 
-@app.route("/")
-def login():
+@app.route('/')
+def login() -> str:
     sess = OAuth2Session(CLIENT_ID, redirect_uri=url_for('callback', _external=True))
     authorization_url, state = sess.authorization_url(AUTH_URL)
 
@@ -55,8 +54,8 @@ def login():
     return f'<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.1/build/pure-min.css"><a href="{authorization_url}" class="pure-button pure-button-primary">GO!</a>'
 
 
-@app.route("/callback")
-def callback():
+@app.route('/callback')
+def callback() -> str:
     sess = OAuth2Session(CLIENT_ID, state=session['oauth_state'])
     sess.verify = False
     token = sess.fetch_token(
@@ -66,12 +65,7 @@ def callback():
         authorization_response=request.url,
     )
 
-    sync_data = {
-        "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
-        "inputs": [{
-            "intent": "action.devices.SYNC"
-        }]
-    }
+    sync_data = {'requestId': 'ff36a3cc-ec34-11e6-b1a0-64510650abcf', 'inputs': [{'intent': 'action.devices.SYNC'}]}
 
     print(token)
 
@@ -80,14 +74,14 @@ def callback():
     return render_template_string(HTML_TEMPLATE, token=token, sync_resp=sync_resp)
 
 
-def main():
+def main() -> None:
     app.run(
         '127.0.0.1',
         8080,
         ssl_context='adhoc',
-        debug=True,
+        debug=True,  # noqa: S201
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

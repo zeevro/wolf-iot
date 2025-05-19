@@ -1,41 +1,41 @@
 import argparse
 import json
+import os
 import sys
 import time
+from typing import Any
 import uuid
 
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2 import service_account
-from paho.mqtt.client import Client
+from paho.mqtt.client import Client, MQTTMessage
 
-from .devices import generate_devices_from_config
-from .utils import parse_mqtt_url
+from wolf_iot.devices import TasmotaDevice, generate_devices_from_config
+from wolf_iot.mqtt_utils import MqttBrokerParams
 
 
-def log(*a):
+def log(*a: Any) -> None:
     print(*a, file=sys.stdout)
     sys.stdout.flush()
 
 
 class Reporter:
-    def __init__(self, google_session):
+    def __init__(self, google_session: AuthorizedSession) -> None:
         self._sess = google_session
-        self._state = {}
+        self._state: dict[str, dict[str, Any]] = {}
 
-    def report_state(self):
-        pass
-
-    def on_msg(self, client, userdata, msg):
+    def on_msg(self, _client: Client, userdata: dict[str, list[TasmotaDevice]], msg: MQTTMessage) -> None:
         device_name = msg.topic[5:-7]
         devices = userdata[device_name]
-        data = json.loads(msg.payload)
-        to_report = {}
+        data: dict[str, Any] = json.loads(msg.payload)
+        to_report: dict[str, dict[str, Any]] = {}
         for device in devices:
             try:
-                new_state = device._translate_state(data)
-            except Exception:
+                new_state = device.translate_state(data)
+            except Exception as e:
+                log(f'ERROR in {type(device).__name__}.translate_state({data!r})! {type(e).__name__}: {e}')
                 continue
-            if new_state == self._state.get(device.id, None):
+            if new_state == self._state.get(device.id):
                 # log(f'no change for {device.id}')
                 continue
             # log(f'{device.id}({device_name}#{device.__class__.__name__}): {new_state}')
@@ -49,50 +49,43 @@ class Reporter:
         req = {
             'agentUserId': '1',
             'requestId': str(uuid.uuid4()),
-            'payload': {
-                'devices': {
-                    'states': to_report,
-                },
-            },
+            'payload': {'devices': {'states': to_report}},
         }
-        log(json.dumps(req, indent=2))
+        log(json.dumps(req))
         resp = self._sess.post('https://homegraph.googleapis.com/v1/devices:reportStateAndNotification', json=req)
         log(resp, resp.json())
 
 
-def get_google_session(account_json_path):
+def get_google_session(account_json_path: bytes | str | os.PathLike) -> AuthorizedSession:
     credentials = service_account.Credentials.from_service_account_file(account_json_path)
     scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/homegraph'])
-    sess = AuthorizedSession(scoped_credentials)
-
-    return sess
+    return AuthorizedSession(scoped_credentials)
 
 
-def main():
+def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument('-a', '--account-path', help='Path to JSON file containing Google account details')
     args = p.parse_args()
 
     google_session = get_google_session(args.account_path)
 
-    brokers = {}
-    clients = []
+    brokers: dict[MqttBrokerParams, dict[str, list[TasmotaDevice]]] = {}
+    clients: list[Client] = []
 
     reporter = Reporter(google_session)
 
-    for device_id, device, desc in generate_devices_from_config():
-        if not device.url.startswith('mqtt://'):
+    for device in generate_devices_from_config():
+        if not (isinstance(device, TasmotaDevice) and device.url.startswith('mqtt://')):
             continue
-        device_name, host, port, username, password = parse_mqtt_url(device.url)
-        broker = (host, port, username, password)
+        broker, device_name = MqttBrokerParams.parse_url(device.url)
         brokers.setdefault(broker, {}).setdefault(device_name, []).append(device)
 
-    for (host, port, username, password), devices in brokers.items():
+    for broker, devices in brokers.items():
         client = Client(clean_session=True, userdata=devices)
         client.on_message = reporter.on_msg
-        if username is not None:
-            client.username_pw_set(username, password)
-        client.connect(host, port)
+        if broker.username is not None:
+            client.username_pw_set(broker.username, broker.password)
+        client.connect(broker.host, broker.port)
 
         for device_name in devices:
             # log(f'{device_name} --> STATE')
@@ -112,6 +105,5 @@ def main():
         client.loop_stop()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
-

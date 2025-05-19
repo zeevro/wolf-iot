@@ -1,0 +1,94 @@
+[build-system]
+requires = ["uv_build>=0.7.5,<0.8"]
+build-backend = "uv_build"
+
+[project]
+name = "wolf-iot"
+version = "0.0.1"
+description = "A stand-alone Google Home integration server"
+authors = [{ name = "Zeev Rotshtein", email = "zeevro@gmail.com" }]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: Flask",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+]
+keywords = [
+    "Google Assistant",
+    "Google Home",
+    "Smart Home",
+    "Home Automation",
+    "OAuth 2.0",
+]
+requires-python = ">=3.13"
+dependencies = [
+    "appdirs",
+    "commentjson",
+    "flask",
+    "google-auth",
+    "gunicorn",
+    "msgspec[toml]",
+    "paho-mqtt",
+    "requests",
+]
+
+[project.urls]
+Repository = "https://github.com/zeevro/wolf-iot"
+
+[project.scripts]
+wolf_iot_server = "wolf_iot.app:main"
+
+[tool.ruff]
+line-length = 150
+output-format = "concise"
+include = ["src/**", "dev_scripts/**"]
+namespace-packages = ["dev_scripts"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "W191", # tab-indentation - conflicts with formatter
+    "E111", # indentation-with-invalid-multiple - conflicts with formatter
+    "E114", # indentation-with-invalid-multiple-comment - conflicts with formatter
+    "E117", # over-indented - conflicts with formatter
+    "D206", # indent-with-spaces - conflicts with formatter
+    "D300", # triple-single-quotes - conflicts with formatter
+    "Q000", # bad-quotes-inline-string - conflicts with formatter
+    "Q001", # bad-quotes-multiline-string - conflicts with formatter
+    "Q002", # bad-quotes-docstring - conflicts with formatter
+    "Q003", # avoidable-escaped-quote - conflicts with formatter
+    "COM812", # missing-trailing-comma - conflicts with formatter
+    "COM819", # prohibited-trailing-comma - conflicts with formatter
+    "E501", # line-too-long - see formatter documentation
+
+    "ERA", # linter: eradicate
+    "FBT", # linter: flake8-boolean-trap
+    "EM", # linter: flake8-errmsg
+    "FIX", # linter: flake8-fixme
+    "C90", # linter: mccabe
+    "D", # linter: pydocstyle
+
+    "ANN401", # any-type
+    "S104", # hardcoded-bind-all-interfaces
+    "BLE001", # blind-except
+    "T201", # print
+    "TD002", # missing-todo-author
+    "TD003", # missing-todo-link
+    "PLR0904", # too-many-public-methods
+    "PLR0911", # too-many-return-statements
+    "PLR0912", # too-many-branches
+    "PLR0913", # too-many-arguments
+    "PLR0914", # too-many-locals
+    "PLR0915", # too-many-statements
+    "PLR0916", # too-many-boolean-expressions
+    "PLR0917", # too-many-positional-arguments
+    "TRY003", # raise-vanilla-args
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "single"

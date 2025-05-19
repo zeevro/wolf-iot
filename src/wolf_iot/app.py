@@ -1,6 +1,6 @@
 from flask import Flask
 
-from wolf_iot.config import init_config, CONFIG_PATH
+from wolf_iot.config import CONFIG_PATH, init_config
 from wolf_iot.devices import DEVICES_PATH
 from wolf_iot.fulfillment import init_fulfillment
 from wolf_iot.oauth2 import init_oauth2
@@ -14,7 +14,7 @@ init_fulfillment(app)
 init_oauth2(app)
 
 
-def main():
+def main() -> None:
     import argparse
 
     p = argparse.ArgumentParser()
@@ -26,10 +26,10 @@ def main():
     args = p.parse_args()
 
     if args.info:
-        print('Config file:   {}'.format(CONFIG_PATH))
-        print('Devices file:  {}'.format(DEVICES_PATH))
-        print('Client ID:     {}'.format(app.config['CLIENT_ID']))
-        print('Client secret: {}'.format(app.config['CLIENT_SECRET']))
+        print(f'Config file:   {CONFIG_PATH}')
+        print(f'Devices file:  {DEVICES_PATH}')
+        print(f'Client ID:     {app.config["client_id"]}')
+        print(f'Client secret: {app.config["client_secret"]}')
         return
 
     if None in (args.cert_path, args.key_path):

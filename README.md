@@ -31,4 +31,3 @@ NOTE: This was created for my own use and so it is very simple, bare-bones and i
 - [ ] Store known devices in some permanent storage (e.g. file/database/redis/etc.)
 - [ ] Device discovery (and sync requests)
 - [ ] Finish writing README :)
-

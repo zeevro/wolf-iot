@@ -3,7 +3,7 @@ import argparse
 import requests
 
 
-def main():
+def main() -> None:
     p = argparse.ArgumentParser(conflict_handler='resolve')
     p.add_argument('-h', '--host')
     p.add_argument('-t', '--timeout', type=float, default=0.5)
@@ -20,17 +20,10 @@ def main():
     url = f'http://{args.host}/'
 
     try:
-        print(
-            requests.request(
-                'POST' if data else 'GET',
-                url,
-                json=data or None,
-                timeout=args.timeout
-            ).json()
-        )
+        print(requests.request('POST' if data else 'GET', url, json=data or None, timeout=args.timeout).json())
     except Exception as e:
-        print('ERROR! {}: {}'.format(e.__class__.__name__, e))
+        print(f'ERROR! {e.__class__.__name__}: {e}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

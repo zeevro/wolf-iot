@@ -1,0 +1,44 @@
+[[devices]]
+id = "1"
+type = "action.devices.types.LIGHT"
+traits = ["action.devices.traits.OnOff", "action.devices.traits.Brightness"]
+willReportState = false
+roomHint = "Bedroom"
+name = { name = "Night light" }
+"@wolf" = { "@type" = "WolfIoT", url = "http://10.0.0.51/" }
+
+[[devices]]
+id = "2"
+type = "action.devices.types.LIGHT"
+traits = ["action.devices.traits.OnOff", "action.devices.traits.Brightness"]
+willReportState = true
+roomHint = "Bedroom"
+name = { name = "LED strip" }
+"@wolf" = { "@type" = "Tasmota", url = "mqtt:///led-strip" }
+
+[[devices]]
+id = "3"
+type = "action.devices.types.LIGHT"
+traits = ["action.devices.traits.OnOff"]
+willReportState = true
+roomHint = "Bedroom"
+name = { name = "Main light" }
+"@wolf" = { "@type" = "Tasmota", url = "mqtt:///ceiling-fan" }
+
+[[devices]]
+id = "4"
+type = "action.devices.types.FAN"
+traits = ["action.devices.traits.OnOff", "action.devices.traits.FanSpeed"]
+willReportState = true
+roomHint = "Bedroom"
+name = { name = "Ceiling fan" }
+"@wolf" = { "@type" = "TasmotaFan", url = "mqtt:///ceiling-fan" }
+
+[devices.attributes]
+availableFanSpeeds.speeds = [
+    { speed_name = "low_speed", speed_values = [{ speed_synonym = ["low", "slow"], lang = "en" }] },
+    { speed_name = "medium_speed", speed_values = [{ speed_synonym = ["medium"], lang = "en" }] },
+    { speed_name = "high_speed", speed_values = [{ speed_synonym = ["high", "fast"], lang = "en" }] },
+]
+availableFanSpeeds.ordered = true
+reversible = false
